@@ -3,8 +3,9 @@ import PropTypes from 'prop-types';
 import {
     Button, Checkbox, Form, FormGroup, FormSelect, FormSelectOption,
     InputGroup, Modal, TextInput, Tabs, Tab, TabTitleText, Flex, FlexItem,
+    EmptyState, EmptyStateBody,
 } from '@patternfly/react-core';
-import { CloseIcon, PlusIcon } from '@patternfly/react-icons';
+import { MinusIcon } from '@patternfly/react-icons';
 import * as dockerNames from 'docker-names';
 
 import { ErrorNotification } from './Notification.jsx';
@@ -32,16 +33,18 @@ const units = {
     },
 };
 
-const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
+const PublishPort = ({ id, item, onChange, idx, removeitem, additem, itemCount }) =>
     (
         <>
             <InputGroup className='ct-input-group-spacer-sm' id={id}>
-                <TextInput aria-label={_("IP (optional)")}
+                {idx !== 0 &&
+                <>
+                    <TextInput aria-label={_("IP (optional)")}
                            type='text'
                            placeholder={_("IP (optional)")}
                            value={item.IP || ''}
                            onChange={value => onChange(idx, 'IP', value)} />
-                <TextInput aria-label={_("Host port (optional)")}
+                    <TextInput aria-label={_("Host port (optional)")}
                            type='number'
                            step={1}
                            min={1}
@@ -49,14 +52,22 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
                            placeholder={_("Host port (optional)")}
                            value={item.hostPort || ''}
                            onChange={value => onChange(idx, 'hostPort', value)} />
-                <Button variant='secondary'
-                        className={"btn-close" + (idx === 0 && !item.IP && !item.hostPort && !item.containerPort ? ' invisible' : '')}
+                    <Button variant='secondary'
+                        className="btn-close"
                         isSmall
+                        isDanger
                         aria-label={_("Remove item")}
-                        icon={<CloseIcon />}
+                        icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                <Button variant='secondary' className="btn-add" onClick={additem} aria-label={_("Add item")} icon={<PlusIcon />} />
+                </>
+                }
+                {idx === 0 &&
+                <Button variant='secondary' className="btn-add" onClick={additem} aria-label={_("Add port map")}>
+                    {_("Add port map")}
+                </Button>
+                }
             </InputGroup>
+            {idx !== 0 &&
             <InputGroup className='ct-input-group-spacer-sm'>
                 <TextInput aria-label={_("Container port")}
                            type='number'
@@ -74,64 +85,108 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
                     <FormSelectOption value='udp' key='udp' label={_("UDP")} />
                 </FormSelect>
             </InputGroup>
+            }
+            { itemCount === 1 &&
+            <InputGroup className='ct-input-group-spacer-sm'>
+                <EmptyState>
+                    <EmptyStateBody>
+                        {_("No ports exposed")}
+                    </EmptyStateBody>
+                </EmptyState>
+            </InputGroup>
+            }
         </>
     );
 
-const EnvVar = ({ id, item, onChange, idx, removeitem, additem }) =>
+const EnvVar = ({ id, item, onChange, idx, removeitem, additem, itemCount }) =>
     (
         <>
             <InputGroup className="ct-input-group-spacer-sm" id={id}>
-                <TextInput aria-label={_("Key")}
+                { idx !== 0 &&
+                <>
+                    <TextInput aria-label={_("Key")}
                            type='text'
                            placeholder={_("Key")}
                            value={item.envKey || ''}
                            onChange={value => onChange(idx, 'envKey', value)} />
-                <TextInput aria-label={_("Value")}
+                    <TextInput aria-label={_("Value")}
                            type='text'
                            placeholder={_("Value")}
                            value={item.envValue || ''}
                            onChange={value => onChange(idx, 'envValue', value)} />
-                <Button variant='secondary'
-                        className={"btn-close" + (idx === 0 && !item.envKey && !item.envValue ? ' invisible' : '')}
+                    <Button variant='secondary'
+                        className="btn-close"
                         isSmall
+                        isDanger
                         aria-label={_("Remove item")}
-                        icon={<CloseIcon />}
+                        icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                <Button variant='secondary'
+                </>
+                }
+                { idx === 0 &&
+                    <Button variant='secondary'
                     className="btn-add"
                     onClick={additem}
-                    icon={<PlusIcon />}
-                    aria-label={_("Add item")} />
+                    aria-label={_("Add variable")}>
+                        {_("Add variable")}
+                    </Button>
+                }
             </InputGroup>
+            { itemCount === 1 &&
+            <InputGroup className='ct-input-group-spacer-sm'>
+                <EmptyState>
+                    <EmptyStateBody>
+                        {_("No environment variables specified")}
+                    </EmptyStateBody>
+                </EmptyState>
+            </InputGroup>
+            }
         </>
     );
 
-const Volume = ({ id, item, onChange, idx, removeitem, additem, options }) =>
+const Volume = ({ id, item, onChange, idx, removeitem, additem, options, itemCount }) =>
     (
         <>
             <InputGroup className='ct-input-group-spacer-sm' id={id || ''}>
-                <FileAutoComplete aria-label={_("Host path")}
+                {idx !== 0 &&
+                <>
+                    <FileAutoComplete aria-label={_("Host path")}
                                   placeholder={_("Host path")}
                                   value={item.hostPath || ''}
                                   onChange={ value => onChange(idx, 'hostPath', value) } />
-                <TextInput aria-label={_("Container path")}
+                    <TextInput aria-label={_("Container path")}
                            placeholder={_("Container path")}
                            value={item.containerPath || ''}
                            onChange={value => onChange(idx, 'containerPath', value)} />
 
-                <Button variant='secondary'
-                        className={"btn-close" + (idx === 0 && !item.containerPath && !item.hostPath ? ' invisible' : '')}
+                    <Button variant='secondary'
+                        className="btn-close"
                         aria-label={_("Remove item")}
                         isSmall
-                        icon={<CloseIcon />}
+                        isDanger
+                        icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
+                </>
+                }
+                { idx === 0 &&
                 <Button variant='secondary'
                         className="btn-add"
                         onClick={additem}
-                        isSmall
-                        icon={<PlusIcon />}
-                        aria-label={_("Add item")} />
+                        aria-label={_("Add volume")}>
+                    {_("Add volume")}
+                </Button>
+                }
             </InputGroup>
+            { itemCount === 1 &&
+            <InputGroup className='ct-input-group-spacer-sm'>
+                <EmptyState>
+                    <EmptyStateBody>
+                        {_("No volumes or directories attached")}
+                    </EmptyStateBody>
+                </EmptyState>
+            </InputGroup>
+            }
+            {idx !== 0 &&
             <InputGroup className='ct-input-group-spacer-sm'>
                 <FormSelect className='pf-c-form-control'
                             aria-label={_("Mode")}
@@ -151,6 +206,7 @@ const Volume = ({ id, item, onChange, idx, removeitem, additem, options }) =>
                     </FormSelect>
                 }
             </InputGroup>
+            }
         </>
     );
 
@@ -204,6 +260,7 @@ class DynamicListForm extends React.Component {
                                     React.cloneElement(this.props.itemcomponent, {
                                         idx: idx, item: item, id: id + "-" + idx,
                                         onChange: this.onItemChange, removeitem: this.removeItem, additem: this.addItem, options: this.props.options,
+                                        itemCount: Object.keys(dialogValues.list).length,
                                     })
                                 }
                             </div>
@@ -427,7 +484,7 @@ export class ImageRunModal extends React.Component {
                     </Tab>
                     <Tab eventKey={1} title={<TabTitleText>{_("Integration")}</TabTitleText>} id="create-image-dialog-tab-integration" className="pf-l-grid pf-m-gutter">
 
-                        <FormGroup fieldId='run-image-dialog-publish' label={_("Ports")}>
+                        <FormGroup fieldId='run-image-dialog-publish' label={_("Port mapping")}>
                             <DynamicListForm id='run-image-dialog-publish'
                                      formclass='publish-port-form'
                                      onChange={value => this.onValueChanged('publish', value)}
