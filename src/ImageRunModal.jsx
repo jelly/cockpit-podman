@@ -33,12 +33,12 @@ const units = {
     },
 };
 
-const PublishPort = ({ id, item, onChange, idx, removeitem, additem, itemCount }) =>
+const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
     (
         <>
             <InputGroup className='ct-input-group-spacer-sm' id={id}>
                 {idx !== 0 &&
-                <>
+                <Flex flexWrap={{ default: 'nowrap' }}>
                     <TextInput aria-label={_("IP (optional)")}
                            type='text'
                            placeholder={_("IP (optional)")}
@@ -52,24 +52,7 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem, itemCount }
                            placeholder={_("Host port (optional)")}
                            value={item.hostPort || ''}
                            onChange={value => onChange(idx, 'hostPort', value)} />
-                    <Button variant='secondary'
-                        className="btn-close"
-                        isSmall
-                        isDanger
-                        aria-label={_("Remove item")}
-                        icon={<MinusIcon />}
-                        onClick={() => removeitem(idx)} />
-                </>
-                }
-                {idx === 0 &&
-                <Button variant='secondary' className="btn-add" onClick={additem} aria-label={_("Add port map")}>
-                    {_("Add port map")}
-                </Button>
-                }
-            </InputGroup>
-            {idx !== 0 &&
-            <InputGroup className='ct-input-group-spacer-sm'>
-                <TextInput aria-label={_("Container port")}
+                    <TextInput aria-label={_("Container port")}
                            type='number'
                            step={1}
                            min={1}
@@ -77,28 +60,32 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem, itemCount }
                            placeholder={_("Container port")}
                            value={item.containerPort || ''}
                            onChange={value => onChange(idx, 'containerPort', value)} />
-                <FormSelect className='pf-c-form-control container-port-protocol'
+                    <FormSelect className='pf-c-form-control container-port-protocol'
                             aria-label={_("Protocol")}
                             value={item.protocol}
                             onChange={value => onChange(idx, 'protocol', value)}>
-                    <FormSelectOption value='tcp' key='tcp' label={_("TCP")} />
-                    <FormSelectOption value='udp' key='udp' label={_("UDP")} />
-                </FormSelect>
+                        <FormSelectOption value='tcp' key='tcp' label={_("TCP")} />
+                        <FormSelectOption value='udp' key='udp' label={_("UDP")} />
+                    </FormSelect>
+                    <Button variant='secondary'
+                        className="btn-close"
+                        isSmall
+                        isDanger
+                        aria-label={_("Remove item")}
+                        icon={<MinusIcon />}
+                        onClick={() => removeitem(idx)} />
+                </Flex>
+                }
+                {idx === 0 &&
+                <Button variant='secondary' className="btn-add" onClick={additem} aria-label={_("Add port map")}>
+                    {_("Add port map")}
+                </Button>
+                }
             </InputGroup>
-            }
-            { itemCount === 1 &&
-            <InputGroup className='ct-input-group-spacer-sm'>
-                <EmptyState>
-                    <EmptyStateBody>
-                        {_("No ports exposed")}
-                    </EmptyStateBody>
-                </EmptyState>
-            </InputGroup>
-            }
         </>
     );
 
-const EnvVar = ({ id, item, onChange, idx, removeitem, additem, itemCount }) =>
+const EnvVar = ({ id, item, onChange, idx, removeitem, additem }) =>
     (
         <>
             <InputGroup className="ct-input-group-spacer-sm" id={id}>
@@ -132,24 +119,15 @@ const EnvVar = ({ id, item, onChange, idx, removeitem, additem, itemCount }) =>
                     </Button>
                 }
             </InputGroup>
-            { itemCount === 1 &&
-            <InputGroup className='ct-input-group-spacer-sm'>
-                <EmptyState>
-                    <EmptyStateBody>
-                        {_("No environment variables specified")}
-                    </EmptyStateBody>
-                </EmptyState>
-            </InputGroup>
-            }
         </>
     );
 
-const Volume = ({ id, item, onChange, idx, removeitem, additem, options, itemCount }) =>
+const Volume = ({ id, item, onChange, idx, removeitem, additem, options }) =>
     (
         <>
             <InputGroup className='ct-input-group-spacer-sm' id={id || ''}>
                 {idx !== 0 &&
-                <>
+                <Flex flexWrap={{ default: 'nowrap' }}>
                     <FileAutoComplete aria-label={_("Host path")}
                                   placeholder={_("Host path")}
                                   value={item.hostPath || ''}
@@ -158,6 +136,20 @@ const Volume = ({ id, item, onChange, idx, removeitem, additem, options, itemCou
                            placeholder={_("Container path")}
                            value={item.containerPath || ''}
                            onChange={value => onChange(idx, 'containerPath', value)} />
+                    <Checkbox id="volume-permission-checkbox"
+                              isChecked={item.mode}
+                              label={_("Writeabale")}
+                              onChange={checked => this.onChange(idx, 'mode', checked ? 'rw' : 'ro')} />
+                    { options && options.selinuxAvailable &&
+                    <FormSelect className='pf-c-form-control'
+                                aria-label={_("SELinux label")}
+                                value={item.selinux}
+                                onChange={value => onChange(idx, 'selinux', value)}>
+                        <FormSelectOption value='' key='' label={_("No SELinux label")} />
+                        <FormSelectOption value='z' key='z' label={_("Shared")} />
+                        <FormSelectOption value='Z' key='Z' label={_("Private")} />
+                    </FormSelect>
+                    }
 
                     <Button variant='secondary'
                         className="btn-close"
@@ -166,7 +158,7 @@ const Volume = ({ id, item, onChange, idx, removeitem, additem, options, itemCou
                         isDanger
                         icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                </>
+                </Flex>
                 }
                 { idx === 0 &&
                 <Button variant='secondary'
@@ -177,36 +169,6 @@ const Volume = ({ id, item, onChange, idx, removeitem, additem, options, itemCou
                 </Button>
                 }
             </InputGroup>
-            { itemCount === 1 &&
-            <InputGroup className='ct-input-group-spacer-sm'>
-                <EmptyState>
-                    <EmptyStateBody>
-                        {_("No volumes or directories attached")}
-                    </EmptyStateBody>
-                </EmptyState>
-            </InputGroup>
-            }
-            {idx !== 0 &&
-            <InputGroup className='ct-input-group-spacer-sm'>
-                <FormSelect className='pf-c-form-control'
-                            aria-label={_("Mode")}
-                            value={item.mode}
-                            onChange={value => onChange(idx, 'mode', value)}>
-                    <FormSelectOption value='ro' key='ro' label={_("ReadOnly")} />
-                    <FormSelectOption value='rw' key='rw' label={_("ReadWrite")} />
-                </FormSelect>
-                { options && options.selinuxAvailable &&
-                    <FormSelect className='pf-c-form-control'
-                                aria-label={_("SELinux label")}
-                                value={item.selinux}
-                                onChange={value => onChange(idx, 'selinux', value)}>
-                        <FormSelectOption value='' key='' label={_("No SELinux label")} />
-                        <FormSelectOption value='z' key='z' label={_("Shared")} />
-                        <FormSelectOption value='Z' key='Z' label={_("Private")} />
-                    </FormSelect>
-                }
-            </InputGroup>
-            }
         </>
     );
 
@@ -260,7 +222,6 @@ class DynamicListForm extends React.Component {
                                     React.cloneElement(this.props.itemcomponent, {
                                         idx: idx, item: item, id: id + "-" + idx,
                                         onChange: this.onItemChange, removeitem: this.removeItem, additem: this.addItem, options: this.props.options,
-                                        itemCount: Object.keys(dialogValues.list).length,
                                     })
                                 }
                             </div>
@@ -491,6 +452,13 @@ export class ImageRunModal extends React.Component {
                                      default={{ IP: null, containerPort: null, hostPort: null, protocol: 'tcp' }}
                                      itemcomponent={ <PublishPort />} />
                         </FormGroup>
+                        {this.state.publish.length === 0 &&
+                        <EmptyState variant='xs'>
+                            <EmptyStateBody>
+                                {_("No ports exposed")}
+                            </EmptyStateBody>
+                        </EmptyState>
+                        }
 
                         <FormGroup fieldId='run-image-dialog-env' label={_("Volumes")}>
                             <DynamicListForm id='run-image-dialog-volume'
@@ -500,6 +468,13 @@ export class ImageRunModal extends React.Component {
                                      options={{ selinuxAvailable: this.props.selinuxAvailable }}
                                      itemcomponent={ <Volume />} />
                         </FormGroup>
+                        {this.state.volumes.length === 0 &&
+                        <EmptyState variant='xs'>
+                            <EmptyStateBody>
+                                {_("No volumes or directories attached")}
+                            </EmptyStateBody>
+                        </EmptyState>
+                        }
 
                         <FormGroup fieldId='run-image-dialog-env' label={_("Environment")}>
                             <DynamicListForm id='run-image-dialog-env'
@@ -508,6 +483,13 @@ export class ImageRunModal extends React.Component {
                                      default={{ envKey: null, envValue: null }}
                                      itemcomponent={ <EnvVar />} />
                         </FormGroup>
+                        {this.state.env.length === 0 &&
+                        <EmptyState variant='xs'>
+                            <EmptyStateBody>
+                                {_("No environment variables specified")}
+                            </EmptyStateBody>
+                        </EmptyState>
+                        }
                     </Tab>
                 </Tabs>
             </Form>
