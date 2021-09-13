@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
     Button, Checkbox, Form, FormGroup, FormSelect, FormSelectOption,
     InputGroup, Modal, TextInput, Tabs, Tab, TabTitleText, Flex, FlexItem,
-    EmptyState, EmptyStateBody,
+    EmptyState, EmptyStateBody, Grid, GridItem
 } from '@patternfly/react-core';
 import { MinusIcon } from '@patternfly/react-icons';
 import * as dockerNames from 'docker-names';
@@ -33,33 +33,41 @@ const units = {
     },
 };
 
-const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
+const PublishPort = ({ id, item, onChange, idx, removeitem }) =>
     (
-        <>
-            <InputGroup className='ct-input-group-spacer-sm' id={id}>
-                {idx !== 0 &&
-                <Flex flexWrap={{ default: 'nowrap' }}>
-                    <TextInput aria-label={_("IP (optional)")}
+        <InputGroup className='ct-input-group-spacer-sm' id={id}>
+            <Grid>
+                <GridItem span={4}>
+                    <FormGroup fieldId='create-image-publish-ip' isStack label={_("IP")}>
+                        <TextInput aria-label={_("IP")}
+                           id='create-image-publish-ip'
                            type='text'
-                           placeholder={_("IP (optional)")}
                            value={item.IP || ''}
                            onChange={value => onChange(idx, 'IP', value)} />
-                    <TextInput aria-label={_("Host port (optional)")}
+                    </FormGroup>
+                </GridItem>
+                <GridItem span={4}>
+                    <TextInput aria-label={_("Host port")}
                            type='number'
                            step={1}
                            min={1}
                            max={65535}
-                           placeholder={_("Host port (optional)")}
                            value={item.hostPort || ''}
                            onChange={value => onChange(idx, 'hostPort', value)} />
-                    <TextInput aria-label={_("Container port")}
+                </GridItem>
+                <GridItem span={4}>
+                    <FormGroup fieldId='create-image-publish-port' isInline label={_("Container port")} isRequired>
+                        <TextInput aria-label={_("Container port")}
                            type='number'
                            step={1}
                            min={1}
                            max={65535}
-                           placeholder={_("Container port")}
                            value={item.containerPort || ''}
+                           isRequired
                            onChange={value => onChange(idx, 'containerPort', value)} />
+                    </FormGroup>
+                </GridItem>
+                <GridItem span={4}>
                     <FormSelect className='pf-c-form-control container-port-protocol'
                             aria-label={_("Protocol")}
                             value={item.protocol}
@@ -67,6 +75,8 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
                         <FormSelectOption value='tcp' key='tcp' label={_("TCP")} />
                         <FormSelectOption value='udp' key='udp' label={_("UDP")} />
                     </FormSelect>
+                </GridItem>
+                <GridItem span={2}>
                     <Button variant='secondary'
                         className="btn-close"
                         isSmall
@@ -74,73 +84,47 @@ const PublishPort = ({ id, item, onChange, idx, removeitem, additem }) =>
                         aria-label={_("Remove item")}
                         icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                </Flex>
-                }
-                {idx === 0 &&
-                <Button variant='secondary' className="btn-add" onClick={additem} aria-label={_("Add port map")}>
-                    {_("Add port map")}
-                </Button>
-                }
-            </InputGroup>
-        </>
+                </GridItem>
+            </Grid>
+        </InputGroup>
     );
 
-const EnvVar = ({ id, item, onChange, idx, removeitem, additem }) =>
+const EnvVar = ({ id, item, onChange, idx, removeitem }) =>
     (
-        <>
-            <InputGroup className="ct-input-group-spacer-sm" id={id}>
-                { idx !== 0 &&
-                <>
-                    <TextInput aria-label={_("Key")}
+        <InputGroup className="ct-input-group-spacer-sm" id={id}>
+            <TextInput aria-label={_("Key")}
                            type='text'
-                           placeholder={_("Key")}
                            value={item.envKey || ''}
                            onChange={value => onChange(idx, 'envKey', value)} />
-                    <TextInput aria-label={_("Value")}
+            <TextInput aria-label={_("Value")}
                            type='text'
-                           placeholder={_("Value")}
                            value={item.envValue || ''}
                            onChange={value => onChange(idx, 'envValue', value)} />
-                    <Button variant='secondary'
+            <Button variant='secondary'
                         className="btn-close"
                         isSmall
                         isDanger
                         aria-label={_("Remove item")}
                         icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                </>
-                }
-                { idx === 0 &&
-                    <Button variant='secondary'
-                    className="btn-add"
-                    onClick={additem}
-                    aria-label={_("Add variable")}>
-                        {_("Add variable")}
-                    </Button>
-                }
-            </InputGroup>
-        </>
+        </InputGroup>
     );
 
-const Volume = ({ id, item, onChange, idx, removeitem, additem, options }) =>
+const Volume = ({ id, item, onChange, idx, removeitem, options }) =>
     (
-        <>
-            <InputGroup className='ct-input-group-spacer-sm' id={id || ''}>
-                {idx !== 0 &&
-                <Flex flexWrap={{ default: 'nowrap' }}>
-                    <FileAutoComplete aria-label={_("Host path")}
-                                  placeholder={_("Host path")}
+        <InputGroup className='ct-input-group-spacer-sm' id={id || ''}>
+            <Flex flexWrap={{ default: 'nowrap' }}>
+                <FileAutoComplete aria-label={_("Host path")}
                                   value={item.hostPath || ''}
                                   onChange={ value => onChange(idx, 'hostPath', value) } />
-                    <TextInput aria-label={_("Container path")}
-                           placeholder={_("Container path")}
+                <TextInput aria-label={_("Container path")}
                            value={item.containerPath || ''}
                            onChange={value => onChange(idx, 'containerPath', value)} />
-                    <Checkbox id="volume-permission-checkbox"
+                <Checkbox id="volume-permission-checkbox"
                               isChecked={item.mode}
                               label={_("Writeabale")}
                               onChange={checked => this.onChange(idx, 'mode', checked ? 'rw' : 'ro')} />
-                    { options && options.selinuxAvailable &&
+                { options && options.selinuxAvailable &&
                     <FormSelect className='pf-c-form-control'
                                 aria-label={_("SELinux label")}
                                 value={item.selinux}
@@ -149,36 +133,26 @@ const Volume = ({ id, item, onChange, idx, removeitem, additem, options }) =>
                         <FormSelectOption value='z' key='z' label={_("Shared")} />
                         <FormSelectOption value='Z' key='Z' label={_("Private")} />
                     </FormSelect>
-                    }
+                }
 
-                    <Button variant='secondary'
+                <Button variant='secondary'
                         className="btn-close"
                         aria-label={_("Remove item")}
                         isSmall
                         isDanger
                         icon={<MinusIcon />}
                         onClick={() => removeitem(idx)} />
-                </Flex>
-                }
-                { idx === 0 &&
-                <Button variant='secondary'
-                        className="btn-add"
-                        onClick={additem}
-                        aria-label={_("Add volume")}>
-                    {_("Add volume")}
-                </Button>
-                }
-            </InputGroup>
-        </>
+            </Flex>
+        </InputGroup>
     );
 
 class DynamicListForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            list: [Object.assign({ key: 0 }, props.default)],
+            list: [],
         };
-        this.keyCounter = 1;
+        this.keyCounter = 0;
         this.removeItem = this.removeItem.bind(this);
         this.addItem = this.addItem.bind(this);
         this.onItemChange = this.onItemChange.bind(this);
@@ -188,8 +162,6 @@ class DynamicListForm extends React.Component {
         this.setState(state => {
             const items = state.list.concat();
             items.splice(idx, 1);
-            if (items.length === 0)
-                items.push(Object.assign({ key: this.keyCounter++ }, this.props.default));
             return { list: items };
         }, () => this.props.onChange(this.state.list.concat()));
     }
@@ -213,6 +185,13 @@ class DynamicListForm extends React.Component {
         const dialogValues = this.state;
         return (
             <>
+                <Flex>
+                    <FlexItem align={{ default: 'alignRight' }}>
+                        <Button variant='secondary' className="btn-add" onClick={this.addItem} aria-label={this.props.label}>
+                            {this.props.label}
+                        </Button>
+                    </FlexItem>
+                </Flex>
                 {
                     dialogValues.list.map((item, idx) =>
                         (
@@ -221,7 +200,7 @@ class DynamicListForm extends React.Component {
                                 {
                                     React.cloneElement(this.props.itemcomponent, {
                                         idx: idx, item: item, id: id + "-" + idx,
-                                        onChange: this.onItemChange, removeitem: this.removeItem, additem: this.addItem, options: this.props.options,
+                                        onChange: this.onItemChange, removeitem: this.removeItem, options: this.props.options,
                                     })
                                 }
                             </div>
@@ -448,6 +427,7 @@ export class ImageRunModal extends React.Component {
                         <FormGroup fieldId='run-image-dialog-publish' label={_("Port mapping")}>
                             <DynamicListForm id='run-image-dialog-publish'
                                      formclass='publish-port-form'
+                                     label={_("Add port map")}
                                      onChange={value => this.onValueChanged('publish', value)}
                                      default={{ IP: null, containerPort: null, hostPort: null, protocol: 'tcp' }}
                                      itemcomponent={ <PublishPort />} />
@@ -463,6 +443,7 @@ export class ImageRunModal extends React.Component {
                         <FormGroup fieldId='run-image-dialog-env' label={_("Volumes")}>
                             <DynamicListForm id='run-image-dialog-volume'
                                      formclass='volume-form'
+                                     label={_("Add volume")}
                                      onChange={value => this.onValueChanged('volumes', value)}
                                      default={{ containerPath: null, hostPath: null, mode: 'rw' }}
                                      options={{ selinuxAvailable: this.props.selinuxAvailable }}
@@ -479,6 +460,7 @@ export class ImageRunModal extends React.Component {
                         <FormGroup fieldId='run-image-dialog-env' label={_("Environment")}>
                             <DynamicListForm id='run-image-dialog-env'
                                      formclass='env-form'
+                                     label={_("Add variable")}
                                      onChange={value => this.onValueChanged('env', value)}
                                      default={{ envKey: null, envValue: null }}
                                      itemcomponent={ <EnvVar />} />
