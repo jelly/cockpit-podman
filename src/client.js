@@ -273,3 +273,15 @@ export function pullImage(system, reference) {
                 .catch(reject);
     });
 }
+
+export function imageExists(system, id) {
+    return new Promise((resolve, reject) => {
+        const options = {
+        };
+        podmanCall("libpod/images/" + id + "/exists", "GET", options, system)
+                .then(reply => {
+                    resolve(reply);
+                })
+                .catch(reject);
+    });
+}

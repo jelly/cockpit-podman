@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
     Badge,
+    Button,
     Card, CardBody, CardHeader, CardTitle, CardActions,
     Dropdown, DropdownItem, DropdownSeparator,
     KebabToggle,
@@ -24,6 +25,7 @@ import * as client from './client.js';
 import ContainerCommitModal from './ContainerCommitModal.jsx';
 
 import './Containers.scss';
+import { ImageRunModal } from './ImageRunModal.jsx';
 import { PodActions } from './PodActions.jsx';
 
 const _ = cockpit.gettext;
@@ -267,6 +269,7 @@ class Containers extends React.Component {
         super(props);
         this.state = {
             width: 0,
+            showCreateContainerModal: false,
         };
         this.renderRow = this.renderRow.bind(this);
         this.onWindowResize = this.onWindowResize.bind(this);
@@ -421,9 +424,34 @@ class Containers extends React.Component {
             if (Object.keys(partitionedContainers).length > 1 && !partitionedContainers["no-pod"].length)
                 delete partitionedContainers["no-pod"];
         }
+
+        // Convert to the search result output
+        let localImages = null;
+        if (this.props.images) {
+            localImages = Object.keys(this.props.images).map(id => {
+                const img = this.props.images[id];
+                if (img.RepoTags) {
+                    img.Index = img.RepoTags[0].split('/')[0];
+                    img.Name = img.RepoTags[0];
+                } else {
+                    img.Name = "<none:none>";
+                    img.Index = "";
+                }
+                img.toString = function imgToString() { return this.Name };
+
+                return img;
+            });
+        }
+
         const filterRunning =
             <Toolbar>
                 <ToolbarContent>
+                    <ToolbarItem>
+                        <Button variant="primary" key="get-new-image-action"
+                        onClick={() => this.setState({ showCreateContainerModal: true })}>
+                            {_("Create container")}
+                        </Button>
+                    </ToolbarItem>
                     <ToolbarItem variant="label" htmlFor="containers-containers-filter">
                         {_("Show")}
                     </ToolbarItem>
@@ -434,6 +462,16 @@ class Containers extends React.Component {
                         </FormSelect>
                     </ToolbarItem>
                 </ToolbarContent>
+                {this.state.showCreateContainerModal &&
+                <ImageRunModal
+                user={this.props.user}
+                localImages={localImages}
+                close={() => this.setState({ showCreateContainerModal: false })}
+                registries={this.props.registries}
+                selinuxAvailable={this.props.selinuxAvailable}
+                systemServiceAvailable={this.props.systemServiceAvailable}
+                userServiceAvailable={this.props.userServiceAvailable}
+                /> }
             </Toolbar>;
 
         const card = (
