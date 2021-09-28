@@ -648,7 +648,6 @@ export class ImageRunModal extends React.Component {
                                 selections={selectedImage || searchText}
                                 onSelect={this.onImageSelect}
                                 onFilter={() => {
-                                    this.setState({ filterImagesList: true });
                                 }}
                                 onClear={this.clearImageSelection}
                                 onTypeaheadInputChanged={this.handleImageSelectInput}
