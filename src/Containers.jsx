@@ -446,12 +446,6 @@ class Containers extends React.Component {
         const filterRunning =
             <Toolbar>
                 <ToolbarContent>
-                    <ToolbarItem>
-                        <Button variant="primary" key="get-new-image-action"
-                        onClick={() => this.setState({ showCreateContainerModal: true })}>
-                            {_("Create container")}
-                        </Button>
-                    </ToolbarItem>
                     <ToolbarItem variant="label" htmlFor="containers-containers-filter">
                         {_("Show")}
                     </ToolbarItem>
@@ -461,8 +455,15 @@ class Containers extends React.Component {
                             <FormSelectOption value='all' label={_("All")} />
                         </FormSelect>
                     </ToolbarItem>
+                    <ToolbarItem>
+                        <Button variant="primary" key="get-new-image-action"
+                        isDisabled={localImages === null}
+                        onClick={() => this.setState({ showCreateContainerModal: true })}>
+                            {_("Create container")}
+                        </Button>
+                    </ToolbarItem>
                 </ToolbarContent>
-                {this.state.showCreateContainerModal &&
+                {this.state.showCreateContainerModal && localImages &&
                 <ImageRunModal
                 user={this.props.user}
                 localImages={localImages}
