@@ -3,6 +3,7 @@ import {
     Badge,
     Button,
     Card, CardBody, CardHeader, CardTitle, CardActions,
+    Divider,
     Dropdown, DropdownItem, DropdownSeparator,
     KebabToggle,
     Text, TextVariants, FormSelect, FormSelectOption,
@@ -455,6 +456,7 @@ class Containers extends React.Component {
                             <FormSelectOption value='all' label={_("All")} />
                         </FormSelect>
                     </ToolbarItem>
+                    <Divider isVertical />
                     <ToolbarItem>
                         <Button variant="primary" key="get-new-image-action"
                         isDisabled={localImages === null}
