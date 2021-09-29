@@ -5,7 +5,7 @@ import {
     InputGroup, Modal, TextInput, SelectVariant, Select, SelectGroup, SelectOption, Spinner,
     Tabs, Tab, TabTitleText, ToggleGroup, ToggleGroupItem, Flex, FlexItem,
 } from '@patternfly/react-core';
-import { CloseIcon, PlusIcon } from '@patternfly/react-icons';
+import { CloseIcon, PlusIcon, SearchIcon } from '@patternfly/react-icons';
 import * as dockerNames from 'docker-names';
 
 import { ErrorNotification } from './Notification.jsx';
@@ -564,10 +564,15 @@ export class ImageRunModal extends React.Component {
         }
 
         // Add the search component
-        const searchComponent = <SelectOption key="search"
-                                              value={cockpit.format(_("Search all registries: $0"), searchText)}
+        const searchComponent = (<SelectOption key="search"
                                               isPlaceholder
-                                              onClick={() => this.onSearchTriggered(searchText)} />;
+                                              onClick={() => this.onSearchTriggered(searchText)}>
+            <Flex>
+                <FlexItem spacer={{ default: 'spacerSm' }}><SearchIcon className="image-select-search-option" /></FlexItem>
+                <FlexItem className="image-select-search-option"> {cockpit.format(_("Search all registries: $0"), searchText)}</FlexItem>
+            </Flex>
+        </SelectOption>
+        );
 
         // Don't show the search component when no results are found
         if (searchText && !noResults) {
