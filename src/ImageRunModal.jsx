@@ -638,6 +638,7 @@ export class ImageRunModal extends React.Component {
                                 isOpen={this.state.isImageSelectOpen}
                                 // Fallback to searchText to not clear the search input after clicking on "Search Registries for X"
                                 selections={selectedImage || searchText}
+                                placeholderText={_("Search string or container location")}
                                 onSelect={this.onImageSelect}
                                 onFilter={() => {
                                 }}
