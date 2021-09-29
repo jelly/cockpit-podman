@@ -256,7 +256,7 @@ export class ImageRunModal extends React.Component {
             searchFinished: false,
             searchInProgress: false,
             searchText: "",
-            imageMap: {},
+            imageResults: {},
             isImageSelectOpen: false,
         };
         this.getCreateConfig = this.getCreateConfig.bind(this);
@@ -403,7 +403,7 @@ export class ImageRunModal extends React.Component {
     };
 
     onSearchTriggered = value => {
-        this.setState({ imageMap: {} });
+        this.setState({ imageResults: {} });
 
         // Do not call the SearchImage API if the input string  is not at least 2 chars,
         // unless Enter is pressed, which should force start the search.
@@ -428,10 +428,10 @@ export class ImageRunModal extends React.Component {
         this.activeConnection.call(options)
                 .then(reply => {
                     if (reply && this._isMounted) {
-                        const imageMap = JSON.parse(reply);
+                        const imageResults = JSON.parse(reply);
                         // Group images on registry
                         const images = {};
-                        imageMap.forEach(image => {
+                        imageResults.forEach(image => {
                             // Strip registry for displaying
                             image.toString = function imageToString() { return this.Name };
                             if (image.Index in images) {
@@ -442,7 +442,7 @@ export class ImageRunModal extends React.Component {
                         });
                         // Keep an select images to the full registry map
                         this.setState({
-                            imageMap: images || {},
+                            imageResults: images || {},
                             searchFinished: true,
                             searchInProgress: false,
                             dialogError: ""
@@ -466,7 +466,7 @@ export class ImageRunModal extends React.Component {
             selectedImage: "",
             image: "",
             isImageSelectOpen: false,
-            imageMap: {},
+            imageResults: {},
             searchText: "",
             searchFinished: false,
         });
@@ -502,7 +502,7 @@ export class ImageRunModal extends React.Component {
             // Reset searchFinished status when text input changes
             searchFinished: false,
             selectedImage: "",
-            imageMap: {},
+            imageResults: {},
         });
     }
 
@@ -515,12 +515,12 @@ export class ImageRunModal extends React.Component {
 
     filterImages = () => {
         const { localImages } = this.props;
-        const { imageMap, searchFinished, searchInProgress, searchText, owner } = this.state;
+        const { imageResults, searchFinished, searchInProgress, searchText, owner } = this.state;
         const local = _("Local images");
-        const images = { ...imageMap };
+        const images = { ...imageResults };
         const isSystem = owner == systemOwner;
 
-        const imageRegistries = [local].concat(Object.keys(imageMap));
+        const imageRegistries = [local].concat(Object.keys(imageResults));
         images[local] = localImages;
 
         const input = new RegExp(searchText, 'i');
