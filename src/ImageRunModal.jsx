@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import {
     Button, Checkbox, Form, FormGroup, FormSelect, FormSelectOption,
     InputGroup, Modal, TextInput, SelectVariant, Select, SelectGroup, SelectOption, Spinner,
-    Tabs, Tab, TabTitleText, ToggleGroup, ToggleGroupItem, Flex, FlexItem,
+    Tabs, Tab, TabTitleText, ToggleGroup, ToggleGroupItem, Flex, FlexItem, Popover
 } from '@patternfly/react-core';
-import { CloseIcon, PlusIcon, SearchIcon } from '@patternfly/react-icons';
+import { CloseIcon, PlusIcon, SearchIcon, OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import * as dockerNames from 'docker-names';
 
 import { ErrorNotification } from './Notification.jsx';
@@ -633,7 +633,16 @@ export class ImageRunModal extends React.Component {
                     <Tab eventKey={0} title={<TabTitleText>{_("Details")}</TabTitleText>} className="pf-l-grid pf-m-gutter">
 
                         {!image &&
-                        <FormGroup fieldId="create-image-image-select" label={_("Image")}>
+                        <FormGroup fieldId="create-image-image-select" label={_("Image")} labelIcon={
+                            <Popover aria-label={_("Image selection help")}
+                        enableFlip
+                        bodyContent={_("host[:port]/[user]/container[:tag].")}>
+                                <button onClick={e => e.preventDefault()} className="pf-c-form__group-label-help">
+                                    <OutlinedQuestionCircleIcon />
+                                </button>
+                            </Popover>
+                        }
+                        >
                             <Select id='create-image-image-select'
                                 menuAppendTo={() => document.body}
                                 variant={SelectVariant.typeahead}
