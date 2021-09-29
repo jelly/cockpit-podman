@@ -495,10 +495,6 @@ export class ImageRunModal extends React.Component {
         });
     }
 
-    handleCreateOption = (newvalue) => {
-        this.onSearchTriggered(newvalue);
-    }
-
     handleImageSelectInput = value => {
         this.setState({
             searchText: value,
