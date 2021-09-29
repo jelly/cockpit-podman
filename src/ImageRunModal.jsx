@@ -251,8 +251,6 @@ export class ImageRunModal extends React.Component {
             runImage: true,
             activeTabKey: 0,
             owner: this.props.systemServiceAvailable ? systemOwner : this.props.user,
-            imageTag: "latest",
-            tagInputDisabled: false,
             /* registry select */
             registry: "",
             /* image select */
@@ -287,8 +285,9 @@ export class ImageRunModal extends React.Component {
             createConfig.image = this.state.image.RepoTags ? this.state.image.RepoTags[0] : "";
         } else {
             let img = this.state.selectedImage.Name;
+            // Make implicit :latest
             if (!img.includes(":")) {
-                img += ":" + this.state.imageTag;
+                img += ":latest";
             }
             createConfig.image = img;
         }
@@ -440,7 +439,7 @@ export class ImageRunModal extends React.Component {
                         const images = {};
                         imageMap.forEach(image => {
                             // Strip registry for displaying
-                            image.toString = function imageToString() { return this.Name.replace(image.Index + '/', '') };
+                            image.toString = function imageToString() { return this.Name };
                             if (image.Index in images) {
                                 images[image.Index].push(image);
                             } else {
@@ -496,16 +495,9 @@ export class ImageRunModal extends React.Component {
             return false;
         }
 
-        // If the image has a tag, disable the tag input
-        let tagInputDisabled = false;
-        if (value.Name.includes(":")) {
-            tagInputDisabled = true;
-        }
-
         this.setState({
             selectedImage: value,
             isImageSelectOpen: false,
-            tagInputDisabled,
         });
     }
 
@@ -660,16 +652,6 @@ export class ImageRunModal extends React.Component {
                         {image &&
                         <FormGroup fieldId='run-image-dialog-image' label={_("Image")} hasNoPaddingTop>
                             <div id='run-image-dialog-image'> { image.RepoTags ? image.RepoTags[0] : "" } </div>
-                        </FormGroup>
-                        }
-
-                        {!image &&
-                        <FormGroup fieldId='run-image-dialog-image-tag' label={_("Tag")} hasNoPaddingTop>
-                            <TextInput id='run-image-dialog-image-tag'
-                              value={this.state.imageTag}
-                              isDisabled={this.state.tagInputDisabled}
-                              onChange={value => this.onValueChanged('imageTag', value)}
-                            />
                         </FormGroup>
                         }
 
