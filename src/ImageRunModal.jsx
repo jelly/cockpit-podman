@@ -251,15 +251,12 @@ export class ImageRunModal extends React.Component {
             runImage: true,
             activeTabKey: 0,
             owner: this.props.systemServiceAvailable ? systemOwner : this.props.user,
-            /* registry select */
-            registry: "",
             /* image select */
             selectedImage: "",
             searchFinished: false,
             searchInProgress: false,
             searchText: "",
             imageMap: {},
-            registryList: {},
             isImageSelectOpen: false,
         };
         this.getCreateConfig = this.getCreateConfig.bind(this);
@@ -420,15 +417,12 @@ export class ImageRunModal extends React.Component {
         this.setState({ searchFinished: false, searchInProgress: true });
         this.activeConnection = rest.connect(client.getAddress(this.state.isSystem), this.state.isSystem);
 
-        const rr = this.state.registry;
-        const registry = rr.length < 1 || rr[rr.length - 1] === "/" ? rr : rr + "/";
-
         const options = {
             method: "GET",
             path: client.VERSION + "libpod/images/search",
             body: "",
             params: {
-                term: registry + value,
+                term: value,
             },
         };
         this.activeConnection.call(options)
