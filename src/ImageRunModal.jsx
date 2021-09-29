@@ -523,7 +523,14 @@ export class ImageRunModal extends React.Component {
         const imageRegistries = [local].concat(Object.keys(imageResults));
         images[local] = localImages;
 
-        const input = new RegExp(searchText, 'i');
+        let regexString = searchText;
+        // Strip image registry option if set for comparing results for docker.io searching for docker.io/fedora
+        // returns docker.io/$username/fedora for example.
+        if (regexString.includes('/')) {
+            regexString = searchText.replace(searchText.split('/')[0], '');
+        }
+        const input = new RegExp(regexString, 'i');
+
         const results = imageRegistries.map((reg, index) => {
             const filtered = images[reg].filter(image => {
                 if ('isSystem' in image && image.isSystem && !isSystem) {
