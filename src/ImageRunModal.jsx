@@ -468,6 +468,7 @@ export class ImageRunModal extends React.Component {
             isImageSelectOpen: false,
             imageMap: {},
             searchText: "",
+            searchFinished: false,
         });
     }
 
@@ -501,6 +502,7 @@ export class ImageRunModal extends React.Component {
             // Reset searchFinished status when text input changes
             searchFinished: false,
             selectedImage: "",
+            imageMap: {},
         });
     }
 
@@ -570,8 +572,8 @@ export class ImageRunModal extends React.Component {
         </SelectOption>
         );
 
-        // Don't show the search component when no results are found
-        if (searchText && !noResults) {
+        // Don't show the search component
+        if (searchText && !searchFinished) {
             results.push(searchComponent);
         }
 
