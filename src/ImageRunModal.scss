@@ -14,6 +14,12 @@
   > select.pf-c-form-control:not(.pf-c-select__toggle-typeahead) {
      max-width: 5rem;
   }
+
+  // Allow long images names to wrap, as the last part may be an important
+  // differentiator between images (and horizontal scrolling is icky)
+  .pf-c-select__menu-item-main {
+     white-space: normal;
+  }
 }
 
 
