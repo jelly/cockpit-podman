@@ -1,5 +1,22 @@
 @import '@patternfly/patternfly/layouts/Grid/grid.css';
 
+#create-image-image-select {
+    max-height: 20rem;
+    overflow-y: scroll;
+}
+
+// Fix the dot next to spinner: https://github.com/patternfly/patternfly-react/issues/6383
+.pf-c-select__list-item.pf-m-loading::marker {
+    display: none;
+}
+
+.image-search-footer {
+    flex-wrap: wrap;
+    .pf-c-toggle-group__text {
+        word-wrap: break-word;
+    }
+}
+
 // Limit the max-width more the override in podman.scss which is 40%, this is a
 // temporary workaround until the "Integration" tab has been redesigned to no
 // longer require a 40% max-width.

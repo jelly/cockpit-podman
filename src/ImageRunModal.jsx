@@ -2,10 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
     Button, Checkbox, Form, FormGroup, FormSelect, FormSelectOption,
-    InputGroup, Modal, TextInput, SelectVariant, Select, SelectGroup, SelectOption, Spinner,
-    Tabs, Tab, TabTitleText, ToggleGroup, ToggleGroupItem, Flex, FlexItem,
+    InputGroup, Modal, TextInput, SelectVariant, Select, SelectGroup, SelectOption,
+    Tabs, Tab, TabTitleText, Flex, FlexItem,
+    ToggleGroup, ToggleGroupItem,
 } from '@patternfly/react-core';
-import { CloseIcon, PlusIcon, SearchIcon } from '@patternfly/react-icons';
+import { CloseIcon, PlusIcon } from '@patternfly/react-icons';
 import * as dockerNames from 'docker-names';
 
 import { ErrorNotification } from './Notification.jsx';
@@ -14,6 +15,8 @@ import * as utils from './util.js';
 import * as client from './client.js';
 import rest from './rest.js';
 import cockpit from 'cockpit';
+
+import { debounce } from 'throttle-debounce';
 
 import "./ImageRunModal.scss";
 
@@ -258,6 +261,7 @@ export class ImageRunModal extends React.Component {
             searchText: "",
             imageResults: {},
             isImageSelectOpen: false,
+            searchByRegistry: 'all',
         };
         this.getCreateConfig = this.getCreateConfig.bind(this);
         this.onCreateClicked = this.onCreateClicked.bind(this);
@@ -266,6 +270,7 @@ export class ImageRunModal extends React.Component {
 
     componentDidMount() {
         this._isMounted = true;
+        this.onSearchTriggered(this.state.searchText);
     }
 
     componentWillUnmount() {
@@ -403,7 +408,7 @@ export class ImageRunModal extends React.Component {
     };
 
     onSearchTriggered = value => {
-        this.setState({ imageResults: {} });
+        // this.setState({ imageResults: {} });
 
         // Do not call the SearchImage API if the input string  is not at least 2 chars,
         // unless Enter is pressed, which should force start the search.
@@ -473,22 +478,14 @@ export class ImageRunModal extends React.Component {
     }
 
     onImageSelectToggle = isOpen => {
-        const { searchInProgress } = this.state;
-        // Don't toggle if we want to search, to allow showing the progress indicator.
-        if (searchInProgress) {
-            return;
-        }
         this.setState({
             isImageSelectOpen: isOpen,
         });
     }
 
     onImageSelect = (event, value, placeholder) => {
-        // Skip placeholder elements such as search/progress
-        if (placeholder) {
-            event.stopPropagation();
-            return false;
-        }
+        if (event === undefined)
+            return;
 
         this.setState({
             selectedImage: value,
@@ -502,9 +499,12 @@ export class ImageRunModal extends React.Component {
             // Reset searchFinished status when text input changes
             searchFinished: false,
             selectedImage: "",
-            imageResults: {},
+            // imageResults: {},
         });
+        this.onSearchTriggered(value);
     }
+
+    debouncedInputChanged = debounce(300, this.handleImageSelectInput);
 
     handleOwnerSelect = (_, event) => {
         const id = event.currentTarget.id;
@@ -515,13 +515,21 @@ export class ImageRunModal extends React.Component {
 
     filterImages = () => {
         const { localImages } = this.props;
-        const { imageResults, searchFinished, searchInProgress, searchText, owner } = this.state;
+        const { imageResults, searchText, owner } = this.state;
         const local = _("Local images");
         const images = { ...imageResults };
         const isSystem = owner == systemOwner;
 
-        const imageRegistries = [local].concat(Object.keys(imageResults));
-        images[local] = localImages;
+        let imageRegistries = [];
+        if (this.state.searchByRegistry == 'local' || this.state.searchByRegistry == 'all') {
+            imageRegistries.push(local);
+            images[local] = localImages;
+
+            if (this.state.searchByRegistry == 'all')
+                imageRegistries = imageRegistries.concat(Object.keys(imageResults));
+        } else {
+            imageRegistries.push(this.state.searchByRegistry);
+        }
 
         let regexString = searchText;
         // Strip image registry option if set for comparing results for docker.io searching for docker.io/fedora
@@ -531,63 +539,43 @@ export class ImageRunModal extends React.Component {
         }
         const input = new RegExp(regexString, 'i');
 
-        const results = imageRegistries.map((reg, index) => {
-            const filtered = images[reg].filter(image => {
-                if ('isSystem' in image && image.isSystem && !isSystem) {
-                    return false;
-                }
-                if ('isSystem' in image && !image.isSystem && isSystem) {
-                    return false;
-                }
-                if (searchText.length < 3) {
-                    return true;
-                }
-                return image.Name.search(input) !== -1;
-            }).map((image, index) => {
-                return (
-                    <SelectOption
-              key={index}
-              value={image}
-              {...(image.Description && { description: image.Description })}
-                    />);
-            });
+        console.info('test', Object.keys(images), imageRegistries);
+        const results = imageRegistries
+                .map((reg, index) => {
+                    const filtered = (reg in images ? images[reg] : [])
+                            .filter(image => {
+                                if ('isSystem' in image && image.isSystem && !isSystem) {
+                                    return false;
+                                }
+                                if ('isSystem' in image && !image.isSystem && isSystem) {
+                                    return false;
+                                }
+                                if (searchText.length < 3) {
+                                    return true;
+                                }
+                                return image.Name.search(input) !== -1;
+                            })
+                            .map((image, index) => {
+                                return (
+                                    <SelectOption
+                                        key={index}
+                                        value={image}
+                                        {...(image.Description && { description: image.Description })}
+                                    />
+                                );
+                            });
 
-            if (filtered.length === 0) {
-                return [];
-            } else {
-                return (
-                    <SelectGroup label={reg} key={index}>
-                        {filtered}
-                    </SelectGroup>
-                );
-            }
-        }).filter(group => group.length !== 0); // filter out empty groups
-
-        const noResults = results.length === 0 && searchFinished;
-        if (noResults) {
-            results.push(<SelectOption key="notfound" isPlaceholder isDisabled value={_("No images found")} />);
-        }
-
-        // Add the search component
-        const searchComponent = (<SelectOption key="search"
-                                              isPlaceholder
-                                              onClick={() => this.onSearchTriggered(searchText)}>
-            <Flex>
-                <FlexItem spacer={{ default: 'spacerSm' }}><SearchIcon className="image-select-search-option" /></FlexItem>
-                <FlexItem className="image-select-search-option"> {cockpit.format(_("Search all registries: $0"), searchText)}</FlexItem>
-            </Flex>
-        </SelectOption>
-        );
-
-        // Don't show the search component
-        if (searchText && !searchFinished) {
-            results.push(searchComponent);
-        }
-
-        const spinner = <SelectOption key="spinner" isLoading isPlaceholder><Spinner size="lg" /></SelectOption>;
-        if (searchInProgress) {
-            results.push(spinner);
-        }
+                    if (filtered.length === 0) {
+                        return [];
+                    } else {
+                        return (
+                            <SelectGroup label={reg} key={index}>
+                                {filtered}
+                            </SelectGroup>
+                        );
+                    }
+                })
+                .filter(group => group.length !== 0); // filter out empty groups
 
         return results;
     }
@@ -595,13 +583,36 @@ export class ImageRunModal extends React.Component {
     render() {
         const { image } = this.props;
         const dialogValues = this.state;
-        const { activeTabKey, owner, searchText, selectedImage } = this.state;
+        const { activeTabKey, owner, selectedImage } = this.state;
 
         // TODO: refactor ImageSelect to a new functional component
         let imageListOptions = [];
         if (!image) {
             imageListOptions = this.filterImages();
         }
+
+        // Add the search component
+        const footer = (
+            <ToggleGroup className='image-search-footer' aria-label={_("Search by registry")}>
+                <ToggleGroupItem text={_("All")} key='all' isSelected={this.state.searchByRegistry == 'all'} onChange={(_, ev) => {
+                    // ev.preventDefault();
+                    // ev.stopPropagation();
+                    this.setState({ searchByRegistry: 'all' });
+                }} />
+                <ToggleGroupItem text={_("Local")} key='local' isSelected={this.state.searchByRegistry == 'local'} onChange={(_, ev) => {
+                    // ev.preventDefault();
+                    // ev.stopPropagation();
+                    this.setState({ searchByRegistry: 'local' });
+                }} />
+                {this.props.registries.search.map(registry => (
+                    <ToggleGroupItem text={registry} key={registry} isSelected={this.state.searchByRegistry == registry} onChange={(_, ev) => {
+                        // ev.preventDefault();
+                        // ev.stopPropagation();
+                        this.setState({ searchByRegistry: registry });
+                    }} />
+                ))}
+            </ToggleGroup>
+        );
 
         const defaultBody = (
             <Form isHorizontal>
@@ -635,19 +646,22 @@ export class ImageRunModal extends React.Component {
                         {!image &&
                         <FormGroup fieldId="create-image-image-select" label={_("Image")}>
                             <Select id='create-image-image-select'
+                                isGrouped
+                                {...(this.state.searchInProgress && { loadingVariant: 'spinner' })}
                                 menuAppendTo={() => document.body}
                                 variant={SelectVariant.typeahead}
                                 noResultsFoundText={_("No images found")}
                                 onToggle={this.onImageSelectToggle}
                                 isOpen={this.state.isImageSelectOpen}
                                 // Fallback to searchText to not clear the search input after clicking on "Search Registries for X"
-                                selections={selectedImage || searchText}
+                                selections={selectedImage}
+                                isInputValuePersisted
                                 placeholderText={_("Search string or container location")}
                                 onSelect={this.onImageSelect}
-                                onFilter={() => {
-                                }}
                                 onClear={this.clearImageSelection}
-                                onTypeaheadInputChanged={this.handleImageSelectInput}
+                                onFilter={() => {}}
+                                onTypeaheadInputChanged={value => this.debouncedInputChanged(value)}
+                                footer={footer}
                             >
                                 {imageListOptions}
                             </Select>
