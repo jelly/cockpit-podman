@@ -649,6 +649,7 @@ export class ImageRunModal extends React.Component {
                                 noResultsFoundText={_("No images found")}
                                 onToggle={this.onImageSelectToggle}
                                 isOpen={this.state.isImageSelectOpen}
+                                isInputValuePersisted
                                 // Fallback to searchText to not clear the search input after clicking on "Search Registries for X"
                                 selections={selectedImage || searchText}
                                 placeholderText={_("Search string or container location")}
