@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
     Button, Checkbox, Form, FormGroup, FormSelect, FormSelectOption,
+    HelperText, HelperTextItem,
     InputGroup, Modal, TextInput, SelectVariant, Select, SelectGroup, SelectOption, Spinner,
     Tabs, Tab, TabTitleText, ToggleGroup, ToggleGroupItem, Flex, FlexItem, Popover
 } from '@patternfly/react-core';
@@ -258,6 +259,8 @@ export class ImageRunModal extends React.Component {
             searchText: "",
             imageResults: {},
             isImageSelectOpen: false,
+            imageHelperVariant: "info",
+            imageHelperText: "",
         };
         this.getCreateConfig = this.getCreateConfig.bind(this);
         this.onCreateClicked = this.onCreateClicked.bind(this);
@@ -494,7 +497,61 @@ export class ImageRunModal extends React.Component {
             selectedImage: value,
             isImageSelectOpen: false,
         });
+
+        //
+        console.log('onImageSelect');
+        this.verifySelectedImage(value);
     }
+
+    verifySelectedImage = value => {
+        if (!value) {
+            this.setState({ imageHelperText: "", imageHelperVariant: "" });
+            return;
+        }
+
+        // Local images have an Id field
+        if (value.Id) {
+            this.setState({ imageHelperText: _("Local image will be used"), imageHelperVariant: "success" });
+            return;
+        }
+
+        // Remote image
+        if (value) {
+            console.log(value);
+            this.setState({ imageHelperText: _("Checking remote"), imageHelperVariant: "" });
+
+            this.activeConnection = rest.connect(client.getAddress(this.state.isSystem), this.state.isSystem);
+            const options = {
+                method: "GET",
+                path: client.VERSION + "libpod/images/search",
+                body: "",
+                params: {
+                    term: value,
+                    listTags: true,
+                },
+            };
+
+            this.activeConnection.call(options)
+                    .then(reply => {
+                        if (reply && this._isMounted) {
+                            const results = JSON.parse(reply);
+                            console.log(results);
+                            this.setState({
+                                imageHelperText: _("Image will be downloaded"),
+                                imageHelperVariant: "success"
+                            });
+                        }
+                    })
+                    .catch(ex => {
+                        if (this._isMounted) {
+                            this.setState({
+                                imageHelperText: _("Remote image does not exist"),
+                                imageHelperVariant: "error"
+                            });
+                        }
+                    });
+        }
+    };
 
     handleImageSelectInput = value => {
         this.setState({
@@ -661,6 +718,9 @@ export class ImageRunModal extends React.Component {
                             >
                                 {imageListOptions}
                             </Select>
+                            <HelperText>
+                                <HelperTextItem variant={this.state.imageHelperVariant}>{this.state.imageHelperText}</HelperTextItem>
+                            </HelperText>
                         </FormGroup>
                         }
 
