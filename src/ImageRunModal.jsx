@@ -681,7 +681,7 @@ export class ImageRunModal extends React.Component {
                             <Select id='create-image-image-select'
                                 isGrouped
                                 {...(this.state.searchInProgress && { loadingVariant: 'spinner' })}
-                                menuAppendTo={() => document.body}
+                                // menuAppendTo={() => document.body}
                                 variant={SelectVariant.typeahead}
                                 noResultsFoundText={_("No images found")}
                                 onToggle={this.onImageSelectToggle}
