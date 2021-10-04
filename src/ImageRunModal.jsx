@@ -416,11 +416,23 @@ export class ImageRunModal extends React.Component {
         if (value.length < 2)
             return;
 
+        // Don't search for a value with a tag specified
+        const patt = /:[\w|\d]+$/;
+        if (patt.test(value)) {
+            return;
+        }
+
         if (this.activeConnection)
             this.activeConnection.close();
 
         this.setState({ searchFinished: false, searchInProgress: true });
         this.activeConnection = rest.connect(client.getAddress(this.state.isSystem), this.state.isSystem);
+
+        let tags = false;
+        if (value.endsWith(':')) {
+            value = value.slice(0, value.length - 1);
+            tags = true;
+        }
 
         const options = {
             method: "GET",
@@ -428,6 +440,7 @@ export class ImageRunModal extends React.Component {
             body: "",
             params: {
                 term: value,
+                listTags: tags,
             },
         };
         this.activeConnection.call(options)
@@ -437,12 +450,17 @@ export class ImageRunModal extends React.Component {
                         // Group images on registry
                         const images = {};
                         imageResults.forEach(image => {
-                            // Strip registry for displaying
-                            image.toString = function imageToString() { return this.Name };
+                            // Add Tag is it's there
+                            image.toString = function imageToString() {
+                                if (this.Tag) {
+                                    return this.Name + ':' + this.Tag;
+                                }
+                                return this.Name;
+                            };
 
                             // TODO: Workaround for registry.fedoraproject.org which returns fedoraproject.org as an Index.
                             let index = image.Index;
-                            if (!image.Name.startsWith(image.Index)) {
+                            if (!index || !image.Name.startsWith(image.Index)) {
                                 index = image.Name.split('/')[0];
                             }
 
@@ -544,6 +562,9 @@ export class ImageRunModal extends React.Component {
         if (regexString.includes('/')) {
             regexString = searchText.replace(searchText.split('/')[0], '');
         }
+        if (regexString.endsWith(':')) {
+            regexString = regexString.slice(0, regexString.length - 1);
+        }
         const input = new RegExp(regexString, 'i');
 
         console.info('test', Object.keys(images), imageRegistries);
@@ -583,6 +604,11 @@ export class ImageRunModal extends React.Component {
                     }
                 })
                 .filter(group => group.length !== 0); // filter out empty groups
+
+        // Remove <SelectGroup> when there is a filter selected.
+        if (this.state.searchByRegistry !== 'all' && imageRegistries.length === 1 && results.length === 1) {
+            return results[0].props.children;
+        }
 
         return results;
     }
