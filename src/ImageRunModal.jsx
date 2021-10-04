@@ -439,10 +439,17 @@ export class ImageRunModal extends React.Component {
                         imageResults.forEach(image => {
                             // Strip registry for displaying
                             image.toString = function imageToString() { return this.Name };
-                            if (image.Index in images) {
-                                images[image.Index].push(image);
+
+                            // TODO: Workaround for registry.fedoraproject.org which returns fedoraproject.org as an Index.
+                            let index = image.Index;
+                            if (!image.Name.startsWith(image.Index)) {
+                                index = image.Name.split('/')[0];
+                            }
+
+                            if (index in images) {
+                                images[index].push(image);
                             } else {
-                                images[image.Index] = [image];
+                                images[index] = [image];
                             }
                         });
                         // Keep an select images to the full registry map
