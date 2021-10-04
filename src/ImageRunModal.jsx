@@ -576,7 +576,7 @@ export class ImageRunModal extends React.Component {
                         return [];
                     } else {
                         return (
-                            <SelectGroup label={reg} key={index}>
+                            <SelectGroup label={reg} key={index} value={reg}>
                                 {filtered}
                             </SelectGroup>
                         );
