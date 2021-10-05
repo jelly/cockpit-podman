@@ -458,12 +458,7 @@ export class ImageRunModal extends React.Component {
                                 return this.Name;
                             };
 
-                            // TODO: Workaround for registry.fedoraproject.org which returns fedoraproject.org as an Index.
-                            let index = image.Index;
-                            if (!index || !image.Name.startsWith(image.Index)) {
-                                index = image.Name.split('/')[0];
-                            }
-
+                            const index = image.Index;
                             if (index in images) {
                                 images[index].push(image);
                             } else {
@@ -613,6 +608,16 @@ export class ImageRunModal extends React.Component {
         return results;
     }
 
+    // Similiar to the output of podman search and podman's /libpod/images/search endpoint only show the root domain.
+    truncateRegistryDomain = (domain) => {
+        const parts = domain.split('.');
+        if (parts.length > 2) {
+            // TODO: nicer?
+            return parts[parts.length - 2] + "." + parts[parts.length - 1];
+        }
+        return domain;
+    }
+
     render() {
         const { image } = this.props;
         const dialogValues = this.state;
@@ -637,13 +642,15 @@ export class ImageRunModal extends React.Component {
                     // ev.stopPropagation();
                     this.setState({ searchByRegistry: 'local' });
                 }} />
-                {this.props.registries.search.map(registry => (
-                    <ToggleGroupItem text={registry} key={registry} isSelected={this.state.searchByRegistry == registry} onChange={(_, ev) => {
+                {this.props.registries.search.map(registry => {
+                    const index = this.truncateRegistryDomain(registry);
+                    return (
+                        <ToggleGroupItem text={index} key={index} isSelected={this.state.searchByRegistry == index} onChange={(_, ev) => {
                         // ev.preventDefault();
                         // ev.stopPropagation();
-                        this.setState({ searchByRegistry: registry });
-                    }} />
-                ))}
+                            this.setState({ searchByRegistry: index });
+                        }} />);
+                })}
             </ToggleGroup>
         );
 
