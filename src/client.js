@@ -101,6 +101,14 @@ export const postPod = (system, action, id, args) => podmanCall("libpod/pods/" +
 
 export const delPod = (system, id, force) => podmanCall("libpod/pods/" + id, "DELETE", { force }, system);
 
+export function createPod(system, config) {
+    return new Promise((resolve, reject) => {
+        podmanCall("libpod/pods/create", "POST", {}, system, JSON.stringify(config))
+                .then(reply => resolve(JSON.parse(reply)))
+                .catch(reject);
+    });
+}
+
 export function execContainer(system, id) {
     const args = {
         AttachStderr: true,

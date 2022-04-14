@@ -34,6 +34,7 @@ import { useDialogs, DialogsContext } from "dialogs.jsx";
 import './Containers.scss';
 import { ImageRunModal } from './ImageRunModal.jsx';
 import { PodActions } from './PodActions.jsx';
+import { PodCreateModal } from './PodCreateModal.jsx';
 
 const _ = cockpit.gettext;
 
@@ -572,6 +573,15 @@ class Containers extends React.Component {
                                             onAddNotification={this.props.onAddNotification} />);
         };
 
+        const createPod = () => {
+            Dialogs.show(<PodCreateModal user={this.props.user}
+                selinuxAvailable={this.props.selinuxAvailable}
+                podmanRestartAvailable={this.props.podmanRestartAvailable}
+                systemServiceAvailable={this.props.systemServiceAvailable}
+                userServiceAvailable={this.props.userServiceAvailable}
+                onAddNotification={this.props.onAddNotification} />);
+        };
+
         const filterRunning =
             <Toolbar>
                 <ToolbarContent>
@@ -591,6 +601,13 @@ class Containers extends React.Component {
                                 isDisabled={localImages === null}
                                 onClick={() => createContainer(null)}>
                             {_("Create container")}
+                        </Button>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                        <Button variant="secondary" key="create-new-pod-action"
+                                id="containers-containers-create-pod-btn"
+                                onClick={() => createPod(null)}>
+                            {_("Create pod")}
                         </Button>
                     </ToolbarItem>
                 </ToolbarContent>
