@@ -574,7 +574,8 @@ class Containers extends React.Component {
         };
 
         const createPod = () => {
-            Dialogs.show(<PodCreateModal user={this.props.user}
+            Dialogs.show(<PodCreateModal props={this.props}
+                user={this.props.user}
                 selinuxAvailable={this.props.selinuxAvailable}
                 podmanRestartAvailable={this.props.podmanRestartAvailable}
                 systemServiceAvailable={this.props.systemServiceAvailable}
