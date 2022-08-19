@@ -81,7 +81,8 @@ export const PodCreateModal = ({ props, user }) => {
     const onValueChanged = (key, value) => {
         if (key === "podName") {
             setPodName(value);
-        } else if (utils.is_valid_container_name(value)) {
+        }
+        if (utils.is_valid_container_name(value)) {
             setNameError(null);
         } else {
             setNameError(_("Invalid characters. Name can only contain letters, numbers, and certain punctuation (_ . -)."));
