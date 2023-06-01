@@ -6,7 +6,7 @@ import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
 import { Dropdown, DropdownItem, DropdownSeparator, KebabToggle } from '@patternfly/react-core/dist/esm/deprecated/components/Dropdown/index.js';
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover";
-import { LabelGroup } from "@patternfly/react-core/dist/esm/components/LabelGroup";
+import { LabelGroup } from "@patternfly/react-core/dist/esm/components/Label";
 import { Text, TextVariants } from "@patternfly/react-core/dist/esm/components/Text";
 import { FormSelect, FormSelectOption } from "@patternfly/react-core/dist/esm/components/FormSelect";
 import { Tooltip } from "@patternfly/react-core/dist/esm/components/Tooltip";
@@ -429,7 +429,7 @@ class Containers extends React.Component {
         ];
 
         if (!container.isDownloading) {
-            columns.push({ title: <ContainerActions version={this.props.version} container={container} healthcheck={healthcheck} onAddNotification={this.props.onAddNotification} localImages={localImages} updateContainerAfterEvent={this.props.updateContainerAfterEvent} />, props: { className: "pf-c-table__action" } });
+            columns.push({ title: <ContainerActions version={this.props.version} container={container} healthcheck={healthcheck} onAddNotification={this.props.onAddNotification} localImages={localImages} updateContainerAfterEvent={this.props.updateContainerAfterEvent} />, props: { className: "pf-v5-c-table__action" } });
         }
 
         const tty = containerDetail ? !!containerDetail.Config.Tty : undefined;
@@ -736,7 +736,7 @@ class Containers extends React.Component {
                         {_("Show")}
                     </ToolbarItem>
                     <ToolbarItem>
-                        <FormSelect id="containers-containers-filter" value={this.props.filter} onChange={this.props.handleFilterChange}>
+                        <FormSelect id="containers-containers-filter" value={this.props.filter} onChange={(_, value) => this.props.handleFilterChange(value)}>
                             <FormSelectOption value='all' label={_("All")} />
                             <FormSelectOption value='running' label={_("Only running")} />
                         </FormSelect>

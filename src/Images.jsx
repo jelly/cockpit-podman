@@ -142,7 +142,7 @@ class Images extends React.Component {
                                      userPodmanRestartAvailable={this.props.userPodmanRestartAvailable}
                                      userLingeringEnabled={this.props.userLingeringEnabled}
                                      version={this.props.version} />,
-                props: { className: 'pf-c-table__action content-action' }
+                props: { className: 'pf-v5-c-table__action content-action' }
             },
         ];
 
@@ -288,7 +288,7 @@ class Images extends React.Component {
                                 <CardTitle>
                                     <Text component={TextVariants.h2}>{_("Images")}</Text>
                                 </CardTitle>
-                                <Flex className="ignore-pixels" style={{ rowGap: "var(--pf-global--spacer--xs)" }}>{imageTitleStats}</Flex>
+                                <Flex className="ignore-pixels" style={{ rowGap: "var(--pf-v5-global--spacer--xs)" }}>{imageTitleStats}</Flex>
                             </Flex>
                         </FlexItem>
                         <FlexItem>
