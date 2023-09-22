@@ -13,9 +13,13 @@ jobs:
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
     if: ${{ github.actor == 'dependabot[bot]' }}
+
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Update node-modules for package.json changes
         run: |
@@ -38,6 +42,6 @@ jobs:
           git commit --amend --no-edit
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.SELF_DEPLOY_KEY }}'
-          git push --force 'git@github.com:${{ github.repository }}' '${{ github.ref_name }}'
+          echo "git push --force 'git@github.com:${{ github.repository }}' '${{ github.head_ref }}'"
           ssh-add -D
           ssh-agent -k
