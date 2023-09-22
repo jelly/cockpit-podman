@@ -10,12 +10,19 @@ jobs:
       contents: read
       pull-requests: write
     timeout-minutes: 5
+    env:
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      REF: ${{ github.event.pull_request.
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
+
+      - name: Fetch PR commits
+        run: git fetch origin "${BASE_SHA}" "${HEAD_SHA}"
 
       - name: Update node-modules for package.json changes
         run: |
@@ -38,6 +45,6 @@ jobs:
           git commit --amend --no-edit
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.SELF_DEPLOY_KEY }}'
-          git push --force 'git@github.com:${{ github.repository }}' '${{ github.ref_name }}'
+          git push --force 'git@github.com:${{ github.repository }}' '${{ github.base_ref }}'
           ssh-add -D
           ssh-agent -k
