@@ -38,6 +38,6 @@ jobs:
           git commit --amend --no-edit
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.SELF_DEPLOY_KEY }}'
-          git push --force 'git@github.com:${{ github.repository }}' HEAD
+          git push --force 'git@github.com:${{ github.repository }}' '${{ github.ref_name }}'
           ssh-add -D
           ssh-agent -k
