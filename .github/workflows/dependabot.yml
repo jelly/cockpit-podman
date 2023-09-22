@@ -26,8 +26,8 @@ jobs:
           echo ${{ github.token }} >> ~/.config/cockpit-dev/github-token
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.NODE_CACHE_DEPLOY_KEY }}'
-          ./tools/node-modules install
-          ./tools/node-modules push
+          GITHUB_BASE=jelly ./tools/node-modules install
+          GITHUB_BASE=jelly ./tools/node-modules push
           git add node_modules
           ssh-add -D
           ssh-agent -k
