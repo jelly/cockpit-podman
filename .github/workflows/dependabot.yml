@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
-    if: ${{ contains(github.head_ref, 'dependencies') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependabot')) }}
+    if: ${{ contains(github.head_ref, 'dependabot') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependencies')) }}
 
     steps:
       - name: Clone repository
