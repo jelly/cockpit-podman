@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
-    if: contains(github.head_ref, 'dependabot')
+    if: ${{ contains(github.head_ref, 'dependabot') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependabot')) }}
 
     steps:
       - name: Clone repository
@@ -21,6 +21,26 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
+
+      - name: Clear .github-changes label
+        if: ${{ !endsWith(github.event.action, 'labeled') }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'dependabot'
+              });
+            } catch (e) {
+              if (e.name == 'HttpError' && e.status == 404) {
+                /* expected: 404 if label is unset */
+              } else {
+                throw e;
+              }
+            }
 
       - name: Update node-modules for package.json changes
         run: |
