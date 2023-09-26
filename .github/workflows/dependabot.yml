@@ -1,4 +1,4 @@
-name: Dependabot update node-modules
+name: Update node_modules
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled, unlabeled]
@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
-    if: ${{ contains(github.head_ref, 'dependabot') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependencies')) }}
+    if: ${{ !endsWith(github.event.action, 'labeled') || contains(github.event.pull_request.labels.*.name, 'node_modules') }}
 
     steps:
       - name: Clone repository
@@ -32,7 +32,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                name: 'dependencies'
+                name: 'node-modules'
               });
             } catch (e) {
               if (e.name == 'HttpError' && e.status == 404) {
@@ -42,7 +42,7 @@ jobs:
               }
             }
 
-      - name: Update node-modules for package.json changes
+      - name: Update node_modules for package.json changes
         run: |
           make tools/node-modules
           git config --global user.name "GitHub Workflow"
