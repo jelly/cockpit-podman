@@ -1,7 +1,7 @@
 name: Update node_modules
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize, labeled, unlabeled]
+    types: [opened, reopened, synchronize, labeled]
 
 jobs:
   dependabot:
@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
-    if: ${{ !endsWith(github.event.action, 'labeled') || contains(github.event.pull_request.labels.*.name, 'node_modules') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'node_modules') }}
 
     steps:
       - name: Clone repository
@@ -23,7 +23,6 @@ jobs:
           fetch-depth: 0
 
       - name: Clear .github-changes label
-        if: ${{ !endsWith(github.event.action, 'labeled') }}
         uses: actions/github-script@v6
         with:
           script: |
