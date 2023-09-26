@@ -1,7 +1,7 @@
 name: Dependabot update node-modules
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, labeled, unlabeled]
 
 jobs:
   dependabot:
@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     # 22.04's podman has issues with piping and causes tar errors
     runs-on: ubuntu-20.04
-    if: ${{ contains(github.head_ref, 'dependabot') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependabot')) }}
+    if: ${{ contains(github.head_ref, 'dependencies') && (!endsWith(github.event.action, 'labeled') || !contains(github.event.pull_request.labels.*.name, 'dependabot')) }}
 
     steps:
       - name: Clone repository
@@ -32,7 +32,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                name: 'dependabot'
+                name: 'dependencies'
               });
             } catch (e) {
               if (e.name == 'HttpError' && e.status == 404) {
