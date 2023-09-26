@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "node-modules"
+      - "node_modules"
     groups:
       eslint:
         patterns:
