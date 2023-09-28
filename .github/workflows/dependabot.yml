@@ -48,8 +48,8 @@ jobs:
           git config --global user.email "cockpituous@cockpit-project.org"
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.NODE_CACHE_DEPLOY_KEY }}'
-          ./tools/node-modules install
-          ./tools/node-modules push
+          GITHUB_BASE=jelly ./tools/node-modules install
+          GTIHUB_BASE=jelly ./tools/node-modules push
           git add node_modules
           ssh-add -D
           ssh-agent -k
@@ -74,6 +74,6 @@ jobs:
           git commit --amend --no-edit node_modules
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.SELF_DEPLOY_KEY }}'
-          git push --force 'git@github.com:${{ github.repository }}' '${{ github.head_ref }}'
+          GITHUB_BASE=jelly git push --force 'git@github.com:${{ github.repository }}' '${{ github.head_ref }}'
           ssh-add -D
           ssh-agent -k
