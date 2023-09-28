@@ -61,7 +61,7 @@ jobs:
           TITLE: '${{ github.event.pull_request.title }}'
         with:
           script: |
-            const title = process.env['TITLE'].replace('[no-test]', '').trim()
+            const title = process.env['TITLE'].replace(/\[no-test\]\W+ /, '')
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
