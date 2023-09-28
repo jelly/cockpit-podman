@@ -43,13 +43,13 @@ jobs:
 
       - name: Update node_modules for package.json changes
         run: |
-          make tools/node-modules
+          GITHUB_BASE=jelly make tools/node-modules
           git config --global user.name "GitHub Workflow"
           git config --global user.email "cockpituous@cockpit-project.org"
           eval $(ssh-agent)
           ssh-add - <<< '${{ secrets.NODE_CACHE_DEPLOY_KEY }}'
-          ./tools/node-modules install
-          ./tools/node-modules push
+          GITHUB_BASE=jelly ./tools/node-modules install
+          GITHUB_BASE=jelly ./tools/node-modules push
           git add node_modules
           ssh-add -D
           ssh-agent -k
