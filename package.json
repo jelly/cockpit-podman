@@ -15,6 +15,7 @@
     "stylelint:fix": "stylelint --fix src/*{.css,scss}"
   },
   "devDependencies": {
+    "just-left-pad": "3.1.1",
     "argparse": "^2.0.1",
     "chrome-remote-interface": "^0.32.1",
     "esbuild": "^0.19.1",
