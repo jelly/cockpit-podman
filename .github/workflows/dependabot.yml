@@ -54,24 +54,20 @@ jobs:
           ssh-add -D
           ssh-agent -k
 
-      - name: Clear no-test label
+      - name: Clear [no-test] prefix from PR title
+        if: ${{ contains(github.event.pull_request.title, '[no-test]') }}
         uses: actions/github-script@v6
+        env:
+          TITLE: '${{ github.event.pull_request.title }}'
         with:
           script: |
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                name: 'no-test'
-              });
-            } catch (e) {
-              if (e.name == 'HttpError' && e.status == 404) {
-                /* expected: 404 if label is unset */
-              } else {
-                throw e;
-              }
-            }
+            const title = process.env['TITLE'].replace('[no-test]', '').trim()
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              title,
+            });
 
       - name: Force push node_modules update
         run: |
