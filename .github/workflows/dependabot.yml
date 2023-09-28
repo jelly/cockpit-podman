@@ -1,4 +1,4 @@
-name: Update node_modules
+name: update node_modules
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled]
