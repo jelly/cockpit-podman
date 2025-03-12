@@ -28,12 +28,14 @@ import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { WithDialogs } from "dialogs.jsx";
 
 import cockpit from 'cockpit';
+import * as python from "python";
 import { superuser } from "superuser";
 
 import ContainerHeader from './ContainerHeader.jsx';
 import Containers from './Containers.jsx';
 import Images from './Images.jsx';
 import * as client from './client.js';
+import scan_quadlets from './detect-quadlets.py';
 import rest from './rest.js';
 import { makeKey, WithPodmanInfo, debug } from './util.js';
 
@@ -56,13 +58,15 @@ class Application extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            // currently connected services per user: { con, uid, name, imagesLoaded, containersLoaded, podsLoaded }
+            // currently connected services per user: { con, uid, name, imagesLoaded, containersLoaded, podsLoaded, quadletsLoaded }
             // start with dummy state to wait for initialization
             users: [{ con: null, uid: 0, name: _("system") }, { con: null, uid: null, name: _("user") }],
             images: null,
             containers: null,
             containersFilter: "all",
             containersStats: {},
+            quadletContainers: {},
+            quadletPods: {},
             textFilter: "",
             ownerFilter: "all",
             dropDownValue: 'Everything',
@@ -458,6 +462,58 @@ class Application extends React.Component {
         this.onOwnerChanged("all");
     }
 
+    async initQuadlets(con) {
+        let path = "/run/systemd/generator";
+        let quadlets = {};
+
+        if (con.uid === null) {
+            path = sessionStorage.getItem('XDG_RUNTIME_DIR');
+        }
+
+        try {
+            quadlets = await python.spawn(scan_quadlets, [path]);
+            quadlets = JSON.parse(quadlets);
+        } catch (exc) {
+            console.warn("error during discovering of quadlets", exc);
+        }
+
+        this.setState(prevState => {
+            const copyContainers = {};
+            Object.entries(prevState.quadletContainers || {}).forEach(([id, container]) => {
+                if (container.uid !== con.uid)
+                    copyContainers[id] = container;
+            });
+
+            for (const key of Object.keys(quadlets.containers)) {
+                const container = {
+                    key: makeKey(con.uid, key),
+                    service: key,
+                    ...quadlets.containers[key],
+                };
+                copyContainers[container.key] = container;
+            }
+
+            const copyPods = {};
+            Object.entries(prevState.quadletPods || {}).forEach(([id, container]) => {
+                if (container.uid !== con.uid)
+                    copyPods[id] = container;
+            });
+
+            for (const key of Object.keys(quadlets.pods)) {
+                const pod = {
+                    key: makeKey(con.uid, key),
+                    service: key,
+                    ...quadlets.pods[key],
+                };
+                copyPods[pod.key] = pod;
+            }
+
+            const users = prevState.users.map(u => u.uid === con.uid ? { ...u, quadletsLoaded: true } : u);
+
+            return { quadletContainers: copyContainers, users };
+        });
+    }
+
     async init(uid, username) {
         const system = uid === 0;
 
@@ -470,7 +526,7 @@ class Application extends React.Component {
             const reply = await client.getInfo(con);
             this.setState(prevState => {
                 const users = prevState.users.filter(u => u.uid !== uid);
-                users.push({ con, uid, name: username, containersLoaded: false, podsLoaded: false, imagesLoaded: false });
+                users.push({ con, uid, name: username, containersLoaded: false, podsLoaded: false, imagesLoaded: false, quadletsLoaded: false });
                 // keep a nice sort order for dialogs
                 users.sort(compareUser);
                 debug("init uid", uid, "username", username, "new users:", users);
@@ -491,6 +547,7 @@ class Application extends React.Component {
 
         this.updateImages(con);
         this.initContainers(con);
+        this.initQuadlets(con);
         this.updatePods(con);
 
         client.streamEvents(con, message => this.handleEvent(message, con))
@@ -589,6 +646,7 @@ class Application extends React.Component {
     }
 
     render() {
+        console.log(this.state.quadletContainers);
         // show troubleshoot if no users are available, i.e. all user's podman services failed
         if (this.state.users.length === 0) {
             return (
@@ -630,6 +688,7 @@ class Application extends React.Component {
         const loadingImages = this.state.users.find(u => !u.imagesLoaded);
         const loadingContainers = this.state.users.find(u => !u.containersLoaded);
         const loadingPods = this.state.users.find(u => !u.podsLoaded);
+        const loadingQuadlets = this.state.users.find(u => !u.quadletsLoaded);
 
         const imageList = (
             <Images
@@ -659,6 +718,8 @@ class Application extends React.Component {
                 onAddNotification={this.onAddNotification}
                 cgroupVersion={this.state.cgroupVersion}
                 updateContainer={this.updateContainer}
+                quadletContainers={loadingQuadlets ? null : this.state.quadletContainers}
+                quadletPods={loadingQuadlets ? null : this.state.quadletPods}
             />
         );
 

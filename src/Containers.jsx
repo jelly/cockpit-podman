@@ -585,6 +585,8 @@ class Containers extends React.Component {
     };
 
     render() {
+        console.log(this.props.containers);
+        console.log(this.props.pods);
         const Dialogs = this.context;
         const columnTitles = [
             { title: _("Container"), transforms: [cellWidth(20)], sortable: true },
