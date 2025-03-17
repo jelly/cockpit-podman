@@ -33,7 +33,7 @@
     "gettext-parser": "8.0.0",
     "glob": "11.0.1",
     "jed": "1.1.1",
-    "sass": "1.79.6",
+    "sass": "1.85.1",
     "sizzle": "2.3.10",
     "stylelint": "16.16.0",
     "stylelint-config-recommended-scss": "14.0.0",
