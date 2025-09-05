@@ -42,6 +42,8 @@ def main(generator_dir: Path):
         with open(generator_dir / entry.name, 'r') as fp:
             source_path = None
             name = None
+            cmd = None
+            image = None
             pod = None
             for line in fp.readlines():
                 if line.startswith('SourcePath='):
@@ -53,6 +55,12 @@ def main(generator_dir: Path):
                 if line.startswith('ContainerName='):
                     name = extract_key(line, 'ContainerName=')
 
+                if line.startswith('Exec='):
+                    cmd = extract_key(line, 'Exec=')
+
+                if line.startswith('Image='):
+                    image = extract_key(line, 'Image=')
+
                 if line.startswith('Pod='):
                     pod = extract_key(line, 'Pod=').replace('.pod', '')
 
@@ -63,7 +71,8 @@ def main(generator_dir: Path):
             if source_path.endswith('.pod'):
                 pods[entry.name] = {'source_path': source_path, 'name': get_name(entry.name, name)}
             elif source_path.endswith('.container'):
-                service = {'source_path': source_path, 'name': get_name(entry.name, name)}
+                service = {'source_path': source_path, 'name': get_name(entry.name, name),
+                           'exec': cmd, 'image': image}
                 if pod is not None:
                     service['pod'] = pod
                 containers[entry.name] = service

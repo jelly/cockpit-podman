@@ -703,11 +703,12 @@ class Containers extends React.Component {
             if (Object.keys(partitionedContainers).length > 1 && !partitionedContainers["no-pod"].length)
                 delete partitionedContainers["no-pod"];
 
+            console.log("partitionedContainers", partitionedContainers);
             const prune_states = ["created", "configured", "stopped", "exited"];
             for (const containerid of Object.keys(this.props.containers)) {
                 const container = this.props.containers[containerid];
                 // Ignore pods and running containers
-                if (!prune_states.includes(container.State.Status) || container.Pod)
+                if (!prune_states.includes(container?.State?.Status) || container.Pod)
                     continue;
 
                 unusedContainers.push({
@@ -825,7 +826,7 @@ class Containers extends React.Component {
                 </CardHeader>
                 <CardBody>
                     <Flex direction={{ default: 'column' }}>
-                        {(this.props.containers === null || this.props.pods === null)
+                        {(this.props.containers === null || this.props.pods === null || this.props.quadletContainers === null || this.props.quadletPods === null)
                             ? <ListingTable variant='compact'
                                             aria-label={_("Containers")}
                                             emptyCaption={emptyCaption}

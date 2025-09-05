@@ -178,6 +178,7 @@ class Application extends React.Component {
     }
 
     initContainers(con) {
+        console.log('init containers', con);
         return client.getContainers(con)
                 .then(containerList => Promise.all(
                     containerList.map(container => client.inspectContainer(con, container.Id))
@@ -200,6 +201,7 @@ class Application extends React.Component {
                         return { containers: copyContainers, users };
                     });
                     this.updateContainerStats(con);
+                    this.initQuadlets(con);
                 })
                 .catch(e => console.warn("initContainers uid", con.uid, "getContainers failed:", e.toString()));
     }
@@ -473,46 +475,84 @@ class Application extends React.Component {
         }
 
         try {
-            quadlets = await python.spawn(scan_quadlets, [path]);
-            quadlets = JSON.parse(quadlets);
+            const quadlets_str = await python.spawn(scan_quadlets, [path]);
+            quadlets = JSON.parse(quadlets_str);
+            console.log("quadlets", quadlets);
         } catch (exc) {
             console.warn("error during discovering of quadlets", exc);
         }
 
+        // { service_name-uid: { } }
         this.setState(prevState => {
+            console.log('prevState', prevState);
             const copyContainers = {};
-            Object.entries(prevState.quadletContainers || {}).forEach(([id, container]) => {
+            const services = Object.keys(quadlets.containers);
+            const running_services = new Set();
+            // keep/copy the containers of other users
+            Object.entries(prevState.containers || {}).forEach(([id, container]) => {
                 if (container.uid !== con.uid)
                     copyContainers[id] = container;
-            });
+                const service_name = container?.Config?.Labels?.PODMAN_SYSTEMD_UNIT;
 
+                copyContainers[id] = container;
+                if (service_name && services.includes(service_name)) {
+                    running_services.add(service_name);
+                }
+            });
+            console.log(running_services);
+
+            // Merge containers state
             for (const key of Object.keys(quadlets.containers)) {
+                const quadlet = quadlets.containers[key];
+                const container_key = makeKey(con.uid, key);
+
+                if (running_services.has(key)) {
+                    continue;
+                }
+                console.log(key);
+
+                // Mock podman container state
                 const container = {
-                    key: makeKey(con.uid, key),
-                    service: key,
-                    ...quadlets.containers[key],
+                    uid: con.uid,
+                    key: container_key,
+                    Id: container_key,
+                    IsService: false,
+                    IsInfra: false,
+                    Pod: "",
+                    Name: quadlet.name,
+                    ImageName: quadlet.image,
+                    Config: {
+                        Cmd: [quadlet.exec],
+                        Labels: {
+                            PODMAN_SYSTEMD_UNIT: key,
+                        },
+                    },
+                    // HACK, hardcoded, needs mapping from systemd and O(n) calls
+                    State: {
+                        Status: 'Exited'
+                    }
                 };
                 copyContainers[container.key] = container;
             }
 
-            const copyPods = {};
-            Object.entries(prevState.quadletPods || {}).forEach(([id, container]) => {
-                if (container.uid !== con.uid)
-                    copyPods[id] = container;
-            });
-
-            for (const key of Object.keys(quadlets.pods)) {
-                const pod = {
-                    key: makeKey(con.uid, key),
-                    service: key,
-                    ...quadlets.pods[key],
-                };
-                copyPods[pod.key] = pod;
-            }
+            // const copyPods = {};
+            // Object.entries(prevState.quadletPods || {}).forEach(([id, container]) => {
+            //     if (container.uid !== con.uid)
+            //         copyPods[id] = container;
+            // });
+            //
+            // for (const key of Object.keys(quadlets.pods)) {
+            //     const pod = {
+            //         key: makeKey(con.uid, key),
+            //         service: key,
+            //         ...quadlets.pods[key],
+            //     };
+            //     copyPods[pod.key] = pod;
+            // }
 
             const users = prevState.users.map(u => u.uid === con.uid ? { ...u, quadletsLoaded: true } : u);
 
-            return { quadletContainers: copyContainers, users };
+            return { containers: copyContainers, users };
         });
     }
 
@@ -557,8 +597,22 @@ class Application extends React.Component {
 
         this.updateImages(con);
         this.initContainers(con);
-        this.initQuadlets(con);
+        // this.initQuadlets(con);
         this.updatePods(con);
+
+        if (uid == 0) {
+            const system_bus = cockpit.dbus("org.freedesktop.systemd1", { bus: "system", superuser: "try" });
+            system_bus.subscribe({ interface: "org.freedesktop.systemd1.Manager", member: "Reloading" }, (_path, _iface, _signal, [reloading]) => {
+                console.log('system reload');
+                // this.initQuadlets();
+            });
+        } else if (uid === null) {
+            const user_bus = cockpit.dbus("org.freedesktop.systemd1", { bus: "session" });
+            user_bus.subscribe({ interface: "org.freedesktop.systemd1.Manager", member: "Reloading" }, (_path, _iface, _signal, [reloading]) => {
+                console.log('user reload');
+                // this.initQuadlets();
+            });
+        }
 
         client.streamEvents(con, message => this.handleEvent(message, con))
                 .catch(e => console.error("uid", uid, "streamEvents failed:", JSON.stringify(e)))
@@ -724,7 +778,7 @@ class Application extends React.Component {
     }
 
     render() {
-        console.log(this.state.quadletContainers);
+        console.log("quadlet containers", this.state.quadletContainers);
         // show troubleshoot if no users are available, i.e. all user's podman services failed
         if (this.state.users.length === 0) {
             return (

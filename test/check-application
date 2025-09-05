@@ -3459,6 +3459,13 @@ Yaml={name}.yaml
             self.waitPodRow("media", present=False)
             b.set_input_text('#containers-filter input', 'immich-pod.service')
             self.waitPodRow("media", present=True)
+            # Reset filtering
+            b.set_input_text('#containers-filter input', '')
+
+        # Stopped quadlets can be listed
+        systemctl_cmd = "systemctl" if system else "systemctl --user"
+        self.execute(f"{systemctl_cmd} stop quak.service", system=system)
+        testlib.sit()
 
     # HACK: quadlets broken on RHEL-8 https://issues.redhat.com/browse/RHEL-5870
     @testlib.skipImage("no quadlet support", "debian-stable", "ubuntu-2204", "rhel-8-10")
