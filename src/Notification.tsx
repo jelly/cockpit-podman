@@ -13,7 +13,7 @@ const _ = cockpit.gettext;
 
 let last_error = "";
 
-function log_error_if_changed(error) {
+function log_error_if_changed(error: string) {
     // Put the error in the browser log, for easier debugging and
     // matching of known issues in the integration tests.
     if (error != last_error) {
@@ -22,7 +22,13 @@ function log_error_if_changed(error) {
     }
 }
 
-export const ErrorNotification = ({ errorMessage, errorDetail, onDismiss }) => {
+interface ErrorNotificationProps {
+    errorMessage: string;
+    errorDetail?: string;
+    onDismiss?: () => void;
+}
+
+export const ErrorNotification = ({ errorMessage, errorDetail, onDismiss }: ErrorNotificationProps) => {
     log_error_if_changed(errorMessage + (errorDetail ? `: ${errorDetail}` : ""));
     return (
         <Alert isInline variant='danger' title={errorMessage}
